@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { createAccount } from "@/lib/actions/user-actions";
+import { createAccount, signInUser } from "@/lib/actions/user-actions";
 import OTPModal from "./OTPModal";
 import LoaderSpin from "./LoaderSpin";
 
@@ -51,10 +51,13 @@ const AuthForm = ({ type }: { type: FormType }) => {
     setErrorMessage("");
 
     try {
-      const user = await createAccount({
-        fullName: values.fullName || "",
-        email: values.email,
-      });
+      const user =
+        type == "sign-up"
+          ? await createAccount({
+              fullName: values.fullName || "",
+              email: values.email,
+            })
+          : await signInUser({ email: values.email });
 
       setAccountId(user.accountId);
     } catch (error) {
@@ -94,27 +97,25 @@ const AuthForm = ({ type }: { type: FormType }) => {
             />
           )}
 
-          {type == "sign-up" && (
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <div className="shad-form-item">
-                    <FormLabel className="shad-form-label">Email</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="email@example.com"
-                        className="shad-input"
-                        {...field}
-                      />
-                    </FormControl>
-                  </div>
-                  <FormMessage className="shad-form-message" />
-                </FormItem>
-              )}
-            />
-          )}
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <div className="shad-form-item">
+                  <FormLabel className="shad-form-label">Email</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="email@example.com"
+                      className="shad-input"
+                      {...field}
+                    />
+                  </FormControl>
+                </div>
+                <FormMessage className="shad-form-message" />
+              </FormItem>
+            )}
+          />
 
           <Button
             type="submit"
@@ -122,9 +123,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
             disabled={isLoading}
           >
             {type == "sign-in" ? "Sign In" : "Sign Up"}
-            {isLoading && (
-              <LoaderSpin />
-            )}
+            {isLoading && <LoaderSpin />}
           </Button>
 
           {errorMessage && <p className="error-message">* {errorMessage}</p>}
@@ -146,7 +145,9 @@ const AuthForm = ({ type }: { type: FormType }) => {
       </Form>
 
       {/* OTP Verification */}
-      {accountId && <OTPModal email={form.getValues('email')} accountId={accountId}/>}
+      {accountId && (
+        <OTPModal email={form.getValues("email")} accountId={accountId} />
+      )}
     </>
   );
 };
